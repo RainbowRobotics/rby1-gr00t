@@ -14,9 +14,12 @@
   </p>
 </div>
 
+> **This fork is customized for RB-Y1.** For the RB-Y1-specific data prep, fine-tuning, and real-robot inference workflow, jump to [RB-Y1 Quickstart](#rby1-quickstart) or the full guide at [`rby1/README.md`](rby1/README.md).
+
 ## Table of Contents
 
 - [NVIDIA Isaac GR00T](#nvidia-isaac-gr00t)
+- [RB-Y1 Quickstart](#rby1-quickstart)
 - [What's New in GR00T N1.7](#whats-new-in-gr00t-n17)
 - [Installation](#installation)
 - [Model Checkpoints & Embodiment Tags](#model-checkpoints--embodiment-tags)
@@ -83,6 +86,82 @@ The neural network architecture of GR00T N1.7 is a combination of vision-languag
 3. **Fine-tune** — Adapt the model to your robot using [`launch_finetune.py`](#fine-tuning) with your own data and modality config.
 4. **Evaluate** — Validate with [open-loop evaluation](#open-loop-evaluation), then test in [simulation benchmarks](#benchmark-examples) or on real hardware via the [Policy API](getting_started/policy.md).
 5. **Deploy** — Connect `Gr00tPolicy` to your robot controller, optionally accelerated with [TensorRT](scripts/deployment/README.md).
+
+## RB-Y1 Quickstart
+
+This fork adds a ready-to-use pipeline for [RB-Y1](https://www.rainbow-robotics.com/en_rby1). Full details, all flags, and troubleshooting live in [`rby1/README.md`](rby1/README.md) — this section is a compressed map of the four stages.
+
+> **Before you start:** complete the [Installation](#installation) section first. The commands below assume that environment is already active.
+
+<img src="rby1/rby1-gr00t_overview.png" width="700" alt="RB-Y1 GR00T pipeline overview">
+
+### ⚠️ Fork-specific Changes (Rainbow Robotics RBY1)
+
+This repository is a fork of [NVIDIA/Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T/tree/n1.7-release) with modifications for RBY1 robot deployment.
+
+#### Mixed Aspect Ratio Camera Patch
+
+`gr00t/model/gr00t_n1d7/image_augmentations.py` and `examples/rby1/finetune.sh` have been patched to support cameras with **different aspect ratios in the same configuration**
+(e.g. RBY1: landscape front cam 480×640 vs portrait wrist cams 640×480).
+
+The upstream code assumes all camera views share the same aspect ratio. Without this patch, training will fail with:
+
+```
+RuntimeError: stack expects each tensor to be equal size,
+but got [1, 3, 256, 256] at entry 0 and [1, 3, 346, 256] at entry 1
+```
+
+All patch locations are marked with `# [RBY1 PATCH]` in the source code.
+
+> **⚠️ Important — Inference Server:**
+> This patched repository must be used for **both fine-tuning and inference**.
+> The checkpoint only stores parameter values (`shortest_image_edge`, `crop_fraction`, etc.),
+> not the transform logic. Running the inference server (`run_gr00t_server.py`) from the
+> upstream unpatched repository will silently apply incorrect image preprocessing,
+> causing degraded or undefined model behavior.
+
+
+**1. Prepare the dataset** — convert to LeRobot v2, attach `modality.json`, generate stats:
+```bash
+uv run --project scripts/lerobot_conversion \
+  python scripts/lerobot_conversion/convert_v3_to_v2.py \
+  --repo-id rainbowrobotics/icra_0526 --root dataset
+
+cp rby1/modality.json dataset/rainbowrobotics/icra_0526/meta/modality.json
+
+uv run python gr00t/data/stats.py \
+  --dataset-path dataset/rainbowrobotics/icra_0526 \
+  --embodiment-tag NEW_EMBODIMENT \
+  --modality-config-path rby1/rby1m_config.py
+```
+
+**2. Fine-tune**:
+```bash
+USE_WANDB=0 CUDA_VISIBLE_DEVICES=0 NUM_GPUS=1 uv run bash rby1/rby1_finetune.sh \
+  --base-model-path nvidia/GR00T-N1.7-3B \
+  --dataset-path dataset/rainbowrobotics/icra_0526 \
+  --modality-config-path rby1/rby1m_config.py \
+  --embodiment-tag NEW_EMBODIMENT \
+  --output-dir outputs/rby1/test
+```
+
+**3. Evaluate offline** (predicted vs. ground-truth actions):
+```bash
+uv run python gr00t/eval/open_loop_eval.py \
+  --dataset-path dataset/rainbowrobotics/icra_0526 \
+  --embodiment-tag NEW_EMBODIMENT \
+  --model-path outputs/rby1/test/checkpoint-10000 \
+  --action-horizon 40
+```
+
+**4. Run on the real robot** — start the policy server on a GPU machine, then the RB-Y1 inference client on the UPC (see [`rby1/README.md`](rby1/README.md#4-real-robot-gr00t-policy-evaluation) for the client setup):
+```bash
+uv run python gr00t/eval/run_gr00t_server.py \
+  --host 0.0.0.0 --port 5555 \
+  --model-path outputs/rby1/test/checkpoint-10000
+```
+
+→ **Full guide:** [`rby1/README.md`](rby1/README.md)
 
 ## What's New in GR00T N1.7
 
