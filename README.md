@@ -6,7 +6,7 @@ For details on Isaac GR00T itself, refer to the upstream [Isaac GR00T README](ht
 
 ## Overview
 
-This repository adds the components needed to use RBY1 as an embodiment in the Isaac GR00T training and inference pipeline. On the real robot, the served policy connects over ZMQ to [`rby1-lerobot`](https://github.com/RainbowRobotics/rby1-lerobot) for state/image streaming and joint command execution.
+This repository adds RBY1 embodiment support to the Isaac GR00T training and inference pipeline — the dataset schema, modality configuration, and fine-tuning entry point needed to register and train RBY1M as a new embodiment in Isaac GR00T. On the real robot, the served policy connects over ZMQ to [`rby1-lerobot`](https://github.com/RainbowRobotics/rby1-lerobot).
 
 <img src="rby1/rby1-gr00t_overview.png">
 
@@ -28,11 +28,6 @@ The RBY1 integration includes:
 
 These additions and command examples let you use the standard Isaac GR00T data preparation, fine-tuning, and inference workflow while connecting RBY1 datasets and RBY1 robot clients.
 
-## Purpose
-
-The RBY1 integration adds the dataset schema, modality configuration, and fine-tuning entry point needed to register and train RBY1M as a new embodiment in Isaac GR00T.
-
-
 ## Installation
 
 ### Clone the Repository
@@ -44,7 +39,7 @@ GR00T relies on submodules for certain dependencies. Include them when cloning:
 ```sh
 sudo apt install git-lfs && git lfs install
 
-git clone --recurse-submodules https://github.com/rainbowrobotics/rby1-gr00t
+git clone --recurse-submodules https://github.com/RainbowRobotics/rby1-gr00t
 cd rby1-gr00t
 ```
 
@@ -89,7 +84,7 @@ uv run python -c "import gr00t; print('GR00T installed successfully')"
 
 ### 1. Prepare the dataset
 
-To collect the dataset via teleoperation, please refer to the official documentation in [rby1-lerobot](https://github.com/RainbowRobotics/rby1-lerobot)
+To collect the dataset via teleoperation, please refer to the official documentation in [rby1-lerobot](https://github.com/RainbowRobotics/rby1-lerobot).
 
 **1) Conversion** — Convert your dataset from **LeRobot v3** to **LeRobot v2**.
 
@@ -183,7 +178,7 @@ After that, configure the RBY1 robot client to connect to the same host and port
 
 
 For the RBY1 LeRobot client, see [rby1-lerobot](https://github.com/RainbowRobotics/rby1-lerobot).
-After installation of rby1-lerobot, you should properly set the camera config.
+
 
 Install the client on the UPC:
 
@@ -206,7 +201,7 @@ lerobot-robot-client \
   --robot.type=rby1 --fps=<FPS>
 ```  
 > [!NOTE]
-> - When you use lerobot-robot-client, you should properly set the camera config with sutiable rotation option both for your robot's camera and the corresponding dataset
+> - When you use lerobot-robot-client, you should properly set the camera config with suitiable rotation option both for your robot's camera and the corresponding dataset
 > - The ZMQ server `host` and `port` must match the robot client configuration.
 > - <POLICY_SERVER_IP> : Replace it with the **actual IP address of
 > the inference server** — do **not** use `0.0.0.0` from the server's startup log.
