@@ -8,6 +8,7 @@ from gr00t.data.types import (
     ModalityConfig,
 )
 
+
 _ACTION_HORIZON = 40  # matches model_config.action_horizon (see gr00t/configs/model/gr00t_n1d7.py)
 
 rby1m_config = {
