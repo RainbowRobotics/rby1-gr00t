@@ -53,13 +53,13 @@ def apply_with_replay(transform, images, masks=None, replay=None):
             f"Number of masks ({len(masks)}) must match number of images ({len(images)})"
         )
 
-    pre_transforms = getattr(transform, "pre_transforms", None) #[RBY1 PATCH]
+    pre_transforms = getattr(transform, "pre_transforms", None)  # [RBY1 PATCH]
 
     for idx, img in enumerate(images):
         img_array = np.array(img)
-        if pre_transforms:                                      #[RBY1 PATCH]
-            for pt in pre_transforms:                           #[RBY1 PATCH]
-                img_array = pt(image=img_array)["image"]        #[RBY1 PATCH] Apply LetterBoxPad
+        if pre_transforms:  # [RBY1 PATCH]
+            for pt in pre_transforms:  # [RBY1 PATCH]
+                img_array = pt(image=img_array)["image"]  # [RBY1 PATCH] Apply LetterBoxPad
 
         mask_array = None if masks is None else np.array(masks[idx])
         if mask_array is not None and mask_array.dtype == np.bool_:
@@ -495,9 +495,9 @@ def build_image_transformations_albumentations(
         ]
     )
 
-    pre_transforms = [LetterBoxPad(p=1.0)]              # [RBY1 PATCH]
-    train_transform.pre_transforms = pre_transforms     # [RBY1 PATCH]
-    eval_transform.pre_transforms = pre_transforms      # [RBY1 PATCH]
+    pre_transforms = [LetterBoxPad(p=1.0)]  # [RBY1 PATCH]
+    train_transform.pre_transforms = pre_transforms  # [RBY1 PATCH]
+    eval_transform.pre_transforms = pre_transforms  # [RBY1 PATCH]
 
     return train_transform, eval_transform
 
