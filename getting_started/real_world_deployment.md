@@ -185,7 +185,7 @@ The pseudo-code below uses a synchronous workflow, which may cause stop-and-go. 
 # ========== Initialization ==========
 # 1. Initialize and test cameras
 hand_camera = initialize_hand_camera()  # e.g., OrbbecSDK
-env_camera = initialize_env_camera()    # e.g., RealSense
+env_camera = initialize_env_camera()  # e.g., RealSense
 test_cameras()  # Show preview and verify normal operation
 
 # 2. Connect and test robot

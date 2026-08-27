@@ -15,7 +15,7 @@ policy = Gr00tPolicy(
     model_path="/path/to/your/checkpoint",
     embodiment_tag=EmbodimentTag.NEW_EMBODIMENT,  # or other embodiment tags
     device="cuda:0",  # or "cpu", or device index like 0
-    strict=True  # Enable input/output validation (recommended during development)
+    strict=True,  # Enable input/output validation (recommended during development)
 )
 ```
 
@@ -118,12 +118,12 @@ observation = {
         # ... one entry per camera
     },
     "state": {
-        "state_name": np.ndarray,   # Shape: (B, T, D), dtype: float32
+        "state_name": np.ndarray,  # Shape: (B, T, D), dtype: float32
         # ... one entry per state stream
     },
     "language": {
-        "task": [[str]],            # Shape: (B, 1), list of lists of strings
-    }
+        "task": [[str]],  # Shape: (B, 1), list of lists of strings
+    },
 }
 ```
 
@@ -329,7 +329,7 @@ policy = PolicyClient(
     host="localhost",  # or IP address of your GPU server
     port=5555,
     timeout_ms=15000,  # 15 second timeout for inference
-    strict=False,      # leave the validation to the server
+    strict=False,  # leave the validation to the server
 )
 
 # Verify connection
@@ -526,8 +526,8 @@ For single environments, use batch size of 1:
 # Add batch dimension (B=1)
 observation = {
     "video": {"wrist_cam": video[np.newaxis, ...]},  # (1, T, H, W, 3)
-    "state": {"joints": state[np.newaxis, ...]},     # (1, T, D)
-    "language": {"task": [["pick up the cube"]]},    # List of length 1
+    "state": {"joints": state[np.newaxis, ...]},  # (1, T, D)
+    "language": {"task": [["pick up the cube"]]},  # List of length 1
 }
 
 action, _ = policy.get_action(observation)

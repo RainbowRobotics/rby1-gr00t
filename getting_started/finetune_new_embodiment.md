@@ -49,7 +49,7 @@ so100_config = {
             # single_arm: RELATIVE = delta from current state (better generalization)
             ActionConfig(
                 rep=ActionRepresentation.RELATIVE,
-                type=ActionType.NON_EEF,       # joint-space, not end-effector
+                type=ActionType.NON_EEF,  # joint-space, not end-effector
                 format=ActionFormat.DEFAULT,
             ),
             # gripper: ABSOLUTE = target position (binary open/close works better absolute)

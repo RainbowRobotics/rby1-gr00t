@@ -18,7 +18,13 @@ Here's the [SO-100 example](../examples/SO100/so100_config.py):
 
 ```python
 from gr00t.configs.data.embodiment_configs import register_modality_config
-from gr00t.data.types import ModalityConfig, ActionConfig, ActionRepresentation, ActionType, ActionFormat
+from gr00t.data.types import (
+    ModalityConfig,
+    ActionConfig,
+    ActionRepresentation,
+    ActionType,
+    ActionFormat,
+)
 
 so100_config = {
     "video": ModalityConfig(...),
@@ -47,11 +53,11 @@ Defines which temporal offsets to sample relative to the current timestep:
 Examples:
 ```python
 # Single current frame for video
-delta_indices=[0]
+delta_indices = [0]
 
 
 # 16-step action prediction horizon
-delta_indices=list(range(0, 16))
+delta_indices = list(range(0, 16))
 ```
 
 > **Note:** If you modify `delta_indices` for the action modality (e.g., changing the action horizon from 16 to 8), you **must** regenerate the dataset statistics by re-running `python gr00t/data/stats.py --dataset-path <dataset_path> --embodiment-tag <embodiment_tag>`. The normalization statistics (especially `meta/relative_stats.json`) are computed based on the original `delta_indices` length, and a mismatch will cause errors during training.
@@ -321,9 +327,7 @@ After defining your configuration, register it so it's available to the training
 ```python
 from gr00t.configs.data.embodiment_configs import register_modality_config
 
-your_modality_config = {
-    ...
-}
+your_modality_config = {...}
 
 register_modality_config(your_modality_config, embodiment_tag=EmbodimentTag.NEW_EMBODIMENT)
 ```
