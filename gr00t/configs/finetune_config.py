@@ -196,6 +196,9 @@ class FinetuneConfig:
     The processor (tokenizer/config) is still loaded from base_model_path.
     Useful for CI/testing to skip the slow checkpoint shard loading."""
 
+    letter_box_transform: bool = False
+    """If True, pad images to square before resize and crop operations."""
+
     def __post_init__(self) -> None:
         if self.gradient_accumulation_steps < 1:
             raise ValueError(

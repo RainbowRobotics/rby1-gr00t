@@ -53,17 +53,23 @@ def apply_with_replay(transform, images, masks=None, replay=None):
             f"Number of masks ({len(masks)}) must match number of images ({len(images)})"
         )
 
-    pre_transforms = getattr(transform, "pre_transforms", None)  # [RBY1 PATCH]
+    pre_transforms = getattr(transform, "pre_transforms", None)
 
     for idx, img in enumerate(images):
         img_array = np.array(img)
-        if pre_transforms:  # [RBY1 PATCH]
-            for pt in pre_transforms:  # [RBY1 PATCH]
-                img_array = pt(image=img_array)["image"]  # [RBY1 PATCH] Apply LetterBoxPad
 
         mask_array = None if masks is None else np.array(masks[idx])
         if mask_array is not None and mask_array.dtype == np.bool_:
             mask_array = mask_array.astype(np.uint8)
+
+        if pre_transforms:
+            for pre_transform in pre_transforms:
+                if mask_array is None:
+                    result = pre_transform(image=img_array)
+                else:
+                    result = pre_transform(image=img_array, mask=mask_array)
+                    mask_array = result["mask"]
+                img_array = result["image"]
 
         # Apply mask-based transforms FIRST (per-frame, using current frame's mask)
         if mask_transforms and mask_array is not None:
@@ -385,6 +391,7 @@ def build_image_transformations_albumentations(
     shortest_image_edge,
     crop_fraction,
     extra_augmentation_config: dict | None = None,
+    letter_box_transform: bool = False,
 ):
     """
     Build albumentations-based image transformations for the N1.7 fine-tuning recipe.
@@ -495,9 +502,10 @@ def build_image_transformations_albumentations(
         ]
     )
 
-    pre_transforms = [LetterBoxPad(p=1.0)]  # [RBY1 PATCH]
-    train_transform.pre_transforms = pre_transforms  # [RBY1 PATCH]
-    eval_transform.pre_transforms = pre_transforms  # [RBY1 PATCH]
+    if letter_box_transform:
+        pre_transforms = [LetterBoxPad(p=1.0)]
+        train_transform.pre_transforms = pre_transforms
+        eval_transform.pre_transforms = pre_transforms
 
     return train_transform, eval_transform
 

@@ -81,9 +81,9 @@ class TestTorchvisionTransforms:
         img_16_9 = Image.fromarray(np.random.randint(0, 255, (360, 640, 3), dtype=np.uint8))
         out_4_3 = self.eval_transform(img_4_3)
         out_16_9 = self.eval_transform(img_16_9)
-        assert out_4_3.shape == out_16_9.shape, (
-            f"Shape mismatch for different aspect ratios: {out_4_3.shape} vs {out_16_9.shape}"
-        )
+        assert (
+            out_4_3.shape == out_16_9.shape
+        ), f"Shape mismatch for different aspect ratios: {out_4_3.shape} vs {out_16_9.shape}"
         torch.stack([out_4_3, out_16_9])  # should not raise
 
     def test_square_and_wide_images(self):
@@ -119,6 +119,48 @@ class TestAlbumentationsTransforms:
         ]
         assert "LetterBoxPad" not in transform_names
 
+    def test_letterbox_pad_can_be_enabled(self):
+        train_transform, eval_transform = build_image_transformations_albumentations(
+            image_target_size=None,
+            image_crop_size=None,
+            random_rotation_angle=None,
+            color_jitter_params=None,
+            shortest_image_edge=256,
+            crop_fraction=1.0,
+            letter_box_transform=True,
+        )
+
+        assert hasattr(train_transform, "pre_transforms")
+        assert hasattr(eval_transform, "pre_transforms")
+
+    def test_letterbox_keeps_mask_aligned_for_mask_augmentation(self):
+        train_transform, _ = build_image_transformations_albumentations(
+            image_target_size=None,
+            image_crop_size=None,
+            random_rotation_angle=None,
+            color_jitter_params=None,
+            shortest_image_edge=4,
+            crop_fraction=1.0,
+            letter_box_transform=True,
+        )
+
+        class PaintMask:
+            def __call__(self, image, mask):
+                assert image.shape[:2] == mask.shape[:2]
+                painted = image.copy()
+                painted[mask == 1] = 255
+                return {"image": painted}
+
+        train_transform.mask_transforms = [PaintMask()]
+        image = Image.fromarray(np.zeros((2, 4, 3), dtype=np.uint8))
+        mask = np.zeros((2, 4), dtype=np.uint8)
+        mask[0, 0] = 1
+
+        transformed, _ = apply_with_replay(train_transform, [image], masks=[mask])
+
+        assert transformed[0].shape == (3, 4, 4)
+        assert torch.all(transformed[0][:, 1, 0] == 255)
+
     def test_uses_gear_groot_aspect_preserving_pipeline(self):
         train_names = [type(transform).__name__ for transform in self.train_transform.transforms]
         eval_names = [type(transform).__name__ for transform in self.eval_transform.transforms]
@@ -152,9 +194,9 @@ class TestAlbumentationsTransforms:
         img_4_3_small = Image.fromarray(np.random.randint(0, 255, (240, 320, 3), dtype=np.uint8))
         out_4_3 = self._apply(img_4_3)
         out_4_3_small = self._apply(img_4_3_small)
-        assert out_4_3.shape == out_4_3_small.shape, (
-            f"Shape mismatch for same aspect ratios: {out_4_3.shape} vs {out_4_3_small.shape}"
-        )
+        assert (
+            out_4_3.shape == out_4_3_small.shape
+        ), f"Shape mismatch for same aspect ratios: {out_4_3.shape} vs {out_4_3_small.shape}"
         torch.stack([out_4_3, out_4_3_small])
 
     def test_mixed_aspect_images_preserve_different_shapes(self):

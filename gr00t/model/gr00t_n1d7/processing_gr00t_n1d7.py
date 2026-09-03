@@ -284,6 +284,7 @@ class Gr00tN1d7Processor(BaseProcessor):
                     shortest_image_edge,
                     crop_fraction,
                     extra_augmentation_config=self.extra_augmentation_config,
+                    letter_box_transform=self.letter_box_transform,
                 )
             )
         else:
@@ -445,9 +446,9 @@ class Gr00tN1d7Processor(BaseProcessor):
                 [torch.from_numpy(norm_state_dict[key]) for key in state_keys], dim=-1
             )
 
-        assert normalized_states.shape[1] <= self.max_state_dim, (
-            f"State dimension {normalized_states.shape[1]} exceeds max_state_dim {self.max_state_dim}"
-        )
+        assert (
+            normalized_states.shape[1] <= self.max_state_dim
+        ), f"State dimension {normalized_states.shape[1]} exceeds max_state_dim {self.max_state_dim}"
         padding_shape = (
             *normalized_states.shape[:-1],
             self.max_state_dim - normalized_states.shape[-1],
@@ -851,11 +852,26 @@ class Gr00tN1d7Processor(BaseProcessor):
                 "max_action_horizon",
                 "max_state_dim",
                 "max_action_dim",
+                "image_crop_size",
+                "image_target_size",
+                "use_albumentations",
+                "extra_augmentation_config",
+                "shortest_image_edge",
+                "crop_fraction",
+                "letter_box_transform",
+                "use_percentiles",
+                "apply_sincos_state_encoding",
+                "formalize_language",
             ]
+
+            nullable_override_keys = {
+                "image_crop_size",
+                "image_target_size",
+            }
             for key in override_keys:
                 if key in kwargs:
                     override = kwargs.pop(key)
-                    if override is not None:
+                    if override is not None or key in nullable_override_keys:
                         processor_kwargs[key] = override
         return cls(**processor_kwargs, transformers_loading_kwargs=transformers_loading_kwargs)
 

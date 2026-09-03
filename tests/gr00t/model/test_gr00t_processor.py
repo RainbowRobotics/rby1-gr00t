@@ -105,6 +105,35 @@ def test_from_pretrained_passes_hub_kwargs_to_cached_file(tmp_path):
         }
 
 
+def test_from_pretrained_honors_image_preprocessing_overrides():
+    """Fine-tuning overrides must replace preprocessing saved in the base checkpoint."""
+    from gr00t.model.gr00t_n1d7 import processing_gr00t_n1d7 as processor_module
+
+    mock_vlm = MagicMock()
+    mock_vlm.apply_chat_template.return_value = "mock text"
+    mock_vlm.tokenizer.padding_side = "left"
+
+    with patch.object(processor_module, "build_processor", return_value=mock_vlm):
+        proc = processor_module.Gr00tN1d7Processor.from_pretrained(
+            FIXTURE_DIR,
+            image_crop_size=None,
+            image_target_size=None,
+            shortest_image_edge=320,
+            crop_fraction=1.0,
+            letter_box_transform=True,
+            use_albumentations=True,
+            use_percentiles=True,
+        )
+
+    assert proc.image_crop_size is None
+    assert proc.image_target_size is None
+    assert proc.shortest_image_edge == 320
+    assert proc.crop_fraction == 1.0
+    assert proc.letter_box_transform is True
+    assert proc.use_albumentations is True
+    assert proc.use_percentiles is True
+
+
 def _make_step_data(proc_config) -> VLAStepData:
     """Create synthetic VLAStepData matching the fixture config."""
     import json as _json
